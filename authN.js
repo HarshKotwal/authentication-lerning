@@ -49,7 +49,6 @@ function validateSignup(req, res, next) {
 
 //validate login request body
 function validateLogin(req, res, next) {
-  //validate request body
   const parseData = loginSchema.safeParse(req.body);
   if (!parseData.success) {
     return res.status(400).json({
@@ -62,7 +61,7 @@ function validateLogin(req, res, next) {
 }
 
 //for new user
-app.post("/signup", async function (req, res) {
+app.post("/signup", validateSignup, async function (req, res) {
   try {
     const { email, username, password } = req.body;
     //checks if already exists
@@ -86,7 +85,7 @@ app.post("/signup", async function (req, res) {
 });
 
 //if user already exists in database
-app.post("/login", async function (req, res) {
+app.post("/login", validateLogin, async function (req, res) {
   try {
     const { email, password } = req.body;
     const userProfile = await userExists(email);
