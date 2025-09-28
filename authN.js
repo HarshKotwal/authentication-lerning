@@ -2,9 +2,11 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const jwtPassword = "12345678";
+const zod = require("zod");
 
 mongoose.connect("your mongodb connection string");
 
+//db module
 const userModel = mongoose.model("user", {
   email: { type: String, unique: true },
   username: String,
@@ -19,16 +21,54 @@ async function userExists(email) {
   return await userModel.findOne({ email });
 }
 
+//signup schema
+const signupSchema = zod.object({
+  email: zod.string().email(),
+  username: zod.string().min(3).max(20),
+  password: zod.string().min(6).max(20),
+});
+
+//login schema
+const loginSchema = zod.object({
+  email: zod.string().email(),
+  password: zod.string().min(6).max(20),
+});
+
+//validate signup request body
+function validateSignup(req, res, next) {
+  const parseData = signupSchema.safeParse(req.body);
+  if (!parseData.success) {
+    return res.status(400).json({
+      msg: "Invalid inputs",
+      errors: parseData.error.errors,
+    });
+  }
+  req.body = parseData.data;
+  next();
+}
+
+//validate login request body
+function validateLogin(req, res, next) {
+  //validate request body
+  const parseData = loginSchema.safeParse(req.body);
+  if (!parseData.success) {
+    return res.status(400).json({
+      msg: "Invalid inputs",
+      errors: parseData.error.errors,
+    });
+  }
+  req.body = parseData.data;
+  next();
+}
+
 //for new user
 app.post("/signup", async function (req, res) {
-  const email = req.body.email;
-  const username = req.body.username;
-  const password = req.body.password;
-
-  if (await userExists(email)) {
-    return res.status(400).json({ msg: "User already exixts in database" });
-  }
   try {
+    const { email, username, password } = req.body;
+    //checks if already exists
+    if (await userExists(email)) {
+      return res.status(400).json({ msg: "User already exixts in database" });
+    }
     //stores data in database
     await userModel.create({
       email: email,
