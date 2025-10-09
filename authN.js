@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const jwtPassword = "12345678";
 const zod = require("zod");
+const bcrypt = require("bcrypt");
 
 mongoose.connect("your mongodb connection string");
 
@@ -68,11 +69,13 @@ app.post("/signup", validateSignup, async function (req, res) {
     if (await userExists(email)) {
       return res.status(400).json({ msg: "User already exixts in database" });
     }
+    //hash the passsword with 10 = salt rounds
+    const hashedPassword = await bcrypt.hash(password, 10);
     //stores data in database
     await userModel.create({
       email: email,
       username: username,
-      password: password,
+      password: hashedPassword,
     });
     const token = jwt.sign({ email }, jwtPassword);
     res.json({ token });
@@ -92,7 +95,12 @@ app.post("/login", validateLogin, async function (req, res) {
     if (!userProfile) {
       return res.status(400).json({ msg: "User not found, please SignUp" });
     }
-    if (userProfile.password !== password) {
+    //compare entered password with stored hash password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      userProfile.password
+    );
+    if (!isPasswordValid) {
       return res.status(403).json({ msg: "Incorrect Credentials" });
     }
     const token = jwt.sign({ email }, jwtPassword);
