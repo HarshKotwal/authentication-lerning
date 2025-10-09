@@ -22,10 +22,10 @@ This project demonstrates how to implement **signup**, **login**, **input valida
 
 Category and its Technology used:
 
-Runtime - Node.js 
-Framework - Express 
-Database - MongoDB (Mongoose ODM) 
-Authentication - JSON Web Tokens (JWT) 
+Runtime - Node.js |
+Framework - Express | 
+Database - MongoDB (Mongoose ODM) | 
+Authentication - JSON Web Tokens (JWT) | 
 Security - bcrypt password hashing 
 Validation - Zod 
 
